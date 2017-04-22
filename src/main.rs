@@ -1,9 +1,12 @@
 extern crate rusqlite;
 extern crate serde;
 extern crate serde_json;
+extern crate iron;
 
 #[macro_use]
 extern crate serde_derive;
+use iron::prelude::*;
+use iron::status;
 
 use rusqlite::Connection;
 
@@ -21,7 +24,7 @@ impl Post {
 
     fn roots(db_path: &str) -> Vec<Post> {
         let connection = Connection::open(db_path).unwrap();
-        let mut statement = connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`);").unwrap();
+        let mut statement = connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC;").unwrap();
         let posts = statement.query_map(&[], |row| {
             Post::get(row.get(0), db_path)
         }).unwrap();
@@ -90,6 +93,13 @@ impl Post {
 }
 
 fn main() {
-    let roots = Post::roots("/Users/shane/Desktop/zeg_bot.db");
-    println!("{}", serde_json::to_string(&roots).unwrap());
+
+    fn hello_world(_: &mut Request) -> IronResult<Response> {
+        let roots = Post::roots("/Users/shane/Desktop/zeg_bot.db");
+        let json = serde_json::to_string(&roots).unwrap();
+        println!("{}", &json);
+        Ok(Response::with((status::Ok, json)))
+    }
+
+    let _server = Iron::new(hello_world).http("localhost:9876").unwrap();
 }
