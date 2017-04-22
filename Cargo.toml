@@ -1,0 +1,6 @@
+[package]
+name = "telepost"
+version = "0.1.0"
+authors = ["Shane Qi <qizengtai@gmail.com>"]
+
+[dependencies]
