@@ -15,7 +15,10 @@ use post::Post;
 fn main() {
 
     fn hello_world(_: &mut Request) -> IronResult<Response> {
-        let roots = Post::roots("/Users/shane/Desktop/zeg_bot.db");
+        let roots = match Post::roots("/Users/shane/Desktop/zeg_bot.db") {
+            Ok(roots) => roots,
+            Err(_) => return Ok(Response::with(status::InternalServerError)),
+        };
         let json = serde_json::to_string(&roots);
         match json {
             Ok(json_string) => {

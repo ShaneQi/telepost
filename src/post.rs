@@ -1,6 +1,7 @@
 extern crate rusqlite;
 
 use self::rusqlite::Connection;
+use self::rusqlite::Error;
 
 #[derive(Serialize, Deserialize)]
 pub struct Post {
@@ -13,12 +14,19 @@ pub struct Post {
 }
 
 impl Post {
-    pub fn roots(db_path: &str) -> Vec<Post> {
-        let connection = Connection::open(db_path).unwrap();
-        let mut statement = connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC LIMIT 100;").unwrap();
-        let posts = statement
-            .query_map(&[], |row| Post::get(row.get(0), db_path))
-            .unwrap();
+    pub fn roots(db_path: &str) -> Result<Vec<Post>, Error> {
+        let connection = match Connection::open(db_path) {
+            Ok(connection) => connection,
+            Err(err) => return Err(err),
+        };
+        let mut statement = match connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC LIMIT 100;") {
+            Ok(statement) => statement,
+            Err(err) => return Err(err)
+        };
+        let posts = match statement.query_map(&[], |row| Post::get(row.get(0), db_path)) {
+            Ok(posts) => posts,
+            Err(err) => return Err(err),
+        };
         let mut array: Vec<Post> = vec![];
         for post in posts {
             if let Ok(p) = post {
@@ -27,7 +35,7 @@ impl Post {
                 }
             }
         }
-        array
+        Ok(array)
     }
 
     fn get(uid: i32, db_path: &str) -> Option<Post> {
