@@ -15,27 +15,16 @@ pub struct Post {
 
 impl Post {
     pub fn roots(db_path: &str) -> Result<Vec<Post>, Error> {
-        let connection = match Connection::open(db_path) {
-            Ok(connection) => connection,
-            Err(err) => return Err(err),
-        };
-        let mut statement = match connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC LIMIT 100;") {
-            Ok(statement) => statement,
-            Err(err) => return Err(err)
-        };
-        let posts = match statement.query_map(&[], |row| Post::get(row.get(0), db_path)) {
-            Ok(posts) => posts,
-            Err(err) => return Err(err),
-        };
-        let mut array: Vec<Post> = vec![];
+        let connection = try!(Connection::open(db_path));
+        let mut statement = try!(connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC LIMIT 100;"));
+        let posts = try!(statement.query_map(&[], |row| Post::get(row.get(0), db_path)));
+        let mut posts_vec: Vec<Post> = vec![];
         for post in posts {
-            if let Ok(p) = post {
-                if let Some(pp) = p {
-                    array.push(pp);
-                }
+            if let Some(post) = post.unwrap_or(None) {
+                posts_vec.push(post);
             }
         }
-        Ok(array)
+        Ok(posts_vec)
     }
 
     fn get(uid: i32, db_path: &str) -> Option<Post> {
