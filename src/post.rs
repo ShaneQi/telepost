@@ -73,16 +73,22 @@ impl Post {
 
     fn dig(&mut self, db_path: &str) {
         let mut children = vec![];
-        let connection = Connection::open(db_path).unwrap();
-        let mut statement = connection.prepare("SELECT `child_uid` FROM `post_post` WHERE `parent_uid` = :1 ORDER BY `child_uid` ASC;").unwrap();
-        let children_results = statement
-            .query_map(&[&self.uid], |row| Post::get(row.get(0), db_path))
-            .unwrap();
+        let connection = match Connection::open(db_path) {
+            Ok(connection) => connection,
+            Err(err) => panic!(err.to_string()),
+        };
+        let mut statement = match connection.prepare("SELECT `child_uid` FROM `post_post` WHERE `parent_uid` = :1 ORDER BY `child_uid` ASC;") {
+            Ok(statement) => statement,
+            Err(err) => panic!(err.to_string())
+        };
+        let children_results =
+            match statement.query_map(&[&self.uid], |row| Post::get(row.get(0), db_path)) {
+                Ok(results) => results,
+                Err(err) => panic!(err.to_string()),
+            };
         for child in children_results {
-            if let Ok(post) = child {
-                if let Some(p) = post {
-                    children.push(p);
-                }
+            if let Some(post) = child.unwrap_or(None) {
+                children.push(post);
             }
         }
         self.children = Some(children);
