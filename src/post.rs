@@ -16,7 +16,7 @@ impl Post {
 
     pub fn roots(db_path: &str) -> Vec<Post> {
         let connection = Connection::open(db_path).unwrap();
-        let mut statement = connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC;").unwrap();
+        let mut statement = connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC LIMIT 100;").unwrap();
         let posts = statement.query_map(&[], |row| {
             Post::get(row.get(0), db_path)
         }).unwrap();
