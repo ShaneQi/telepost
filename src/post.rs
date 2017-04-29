@@ -10,6 +10,7 @@ pub struct Post {
     content: String,
     sender_id: i32,
     updated_at: i32,
+    post_type: i32,
     children: Option<Vec<Post>>,
 }
 
@@ -56,6 +57,7 @@ impl Post {
                     content: row.get(1),
                     sender_id: uid,
                     updated_at: row.get(3),
+                    post_type: row.get(4),
                     children: None,
                 }
             })
