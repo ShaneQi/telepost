@@ -36,21 +36,16 @@ impl Post {
         let mut posts = statement
             .query_map_named(&[(":uid", &uid)], |row| {
                 let uid: i32 = row.get(2);
-                let name = match uid {
-                    59586902 => "王日天",
-                    70475313 => "Jake",
-                    79113659 => "毒药",
-                    80548625 => "Shane",
-                    52478211 => "邦斯",
-                    83566437 => "特伦",
-                    136698753 => "Adam",
-                    88643592 => "YJ",
-                    35132256 => "黄日天",
-                    158956669 => "诗雨",
-                    85225615 => "果汁",
-                    50901580 => "Idol",
-                    _ => "",
-                };
+                let mut statement = connection.prepare("SELECT * FROM `users` WHERE `uid` = :uid").unwrap();
+                let name = statement.query_row(&[&uid], |row| {
+                    let mut first_name: String = row.get(1);
+                    let last_name: Result<String, rusqlite::Error> = row.get_checked(2);
+                    if let Ok(last_name) = last_name {
+                        first_name += " ";
+                        first_name += &last_name;
+                    }
+                    first_name
+                }).unwrap_or("???".to_string());
                 Post {
                     uid: row.get(0),
                     sender_name: name.to_string(),
