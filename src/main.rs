@@ -6,6 +6,7 @@ extern crate iron;
 extern crate hyper;
 
 mod post;
+mod secret;
 
 use iron::prelude::*;
 use iron::status;
@@ -15,7 +16,7 @@ use post::Post;
 fn main() {
 
     fn hello_world(_: &mut Request) -> IronResult<Response> {
-        let roots = match Post::roots("/Users/shane/Desktop/zeg_bot.db") {
+        let roots = match Post::roots(&secret::db_path()) {
             Ok(roots) => roots,
             Err(_) => return Ok(Response::with(status::InternalServerError)),
         };
