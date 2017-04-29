@@ -17,7 +17,7 @@ pub struct Post {
 impl Post {
     pub fn roots(db_path: &str) -> Result<Vec<Post>, Error> {
         let connection = try!(Connection::open(db_path));
-        let mut statement = try!(connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) ORDER BY `uid` DESC LIMIT 100;"));
+        let mut statement = try!(connection.prepare("SELECT uid FROM `posts` WHERE `uid` NOT IN (SELECT `child_uid` FROM `post_post`) AND `uid` IN (SELECT `parent_uid` FROM `post_post`) ORDER BY `uid` DESC LIMIT 100;"));
         let posts = try!(statement.query_map(&[], |row| Post::get(row.get(0), db_path)));
         let mut posts_vec: Vec<Post> = vec![];
         for post in posts {
