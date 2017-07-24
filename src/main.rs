@@ -34,5 +34,5 @@ fn main() {
         }
     }
 
-    let _server = Iron::new(hello_world).http("localhost:9876");
+    let _server = Iron::new(hello_world).http("0.0.0.0:9876");
 }
